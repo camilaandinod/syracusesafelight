@@ -1,5 +1,4 @@
-const THREE = window.THREE;
-
+import "../node_modules/three/src/Three.js";
 
 const getMatrixProjectionByCoords = function( coord, matrix ){
 
@@ -39,6 +38,42 @@ var fromLL = function ( lng, lat) {
     return [(x + extent) / (2 * extent), 1 - ((y + extent) / (2 * extent))];
 };
 
+const colorToRGB = function(c){
+  return {r: ((c >> 16) & 0xff), g: ((c >> 8) & 0xff), b: (c & 0xff)};
+}
+
+const interpolate = function(x, y, alpha){
+  return Math.floor(alpha*x + (1.0 - alpha)*y);
+}
+
+const rgbToColor = function(c){
+  return (c.r << 16) + (c.g << 8) + c.b;
+}
+
+const interpolateColors = function(c0, c1, alpha){
+  const color0 = colorToRGB(c0);
+  const color1 = colorToRGB(c1);
+  return rgbToColor({
+    r: interpolate(color0.r, color1.r, alpha),
+    g: interpolate(color0.g, color1.g, alpha),
+    b: interpolate(color0.b, color1.b, alpha)
+  });
+}
+
+
+
+const colorFromMap = function(h, colorMap){
+  if(h < colorMap[0].h) return colorMap[0].c;
+  for(let i = 0; i < (colorMap.length - 1); i++){
+    const current = colorMap[i];
+    const next = colorMap[i+1];
+    if(h >= current.h && h < next.h){
+      const alpha = (h - current.h) / (next.h - current.h);
+      return interpolateColors(next.c,  current.c, alpha);
+    }
+  }
+  return colorMap[colorMap.length - 1].c;
+};
 
 export default class GridPlane {
 
@@ -56,6 +91,12 @@ export default class GridPlane {
         this.getDeck = getDeck;
 
         this.clippingPlane = new THREE.Plane();
+        this.heightColorMap = [
+                                {h:  15.0, c: 0x1d4877},
+                                {h:  25.0, c: 0xdb2e92},
+                                {h:  95.0, c: 0xdb2e92},
+                                {h: 105.0, c: 0xff004f}
+                              ];
 
         this.clippingPlane.normal.set( 0, 1, 0 );
         this.clippingPlaneConstant = -0.5;
@@ -108,27 +149,37 @@ export default class GridPlane {
         this.geometry = new THREE.PlaneGeometry( 1, 1, 1, 1 );
         this.geometry.rotateX(-Math.PI / 2);
 
-        this.material = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            emissive: 0x33ccff,
+        this.material = new THREE.MeshBasicMaterial({
+            ////emissive: 0x33ccff,
             // vertexColors: THREE.VertexColors,
             // side: THREE.FrontSide,
             // side: THREE.BackSide,
             side: THREE.DoubleSide,
             clippingPlanes: [ this.clippingPlane ],
-            wireframe: true,
+            //wireframe: true,
             transparent: true,
-            opacity: 0.1
+            opacity: 0.8,
+            vertexColors: THREE.VertexColors
         });
 
         this.mesh = new THREE.Mesh( this.geometry, this.material );
+
+        this.wireframeMaterial = new THREE.MeshStandardMaterial({
+            emissive: 0x174c6f,
+            // vertexColors: THREE.VertexColors,
+            // side: THREE.FrontSide,
+            // side: THREE.BackSide,
+            side: THREE.DoubleSide,
+            clippingPlanes: [ this.clippingPlane ],
+            wireframe: true
+        });
+        this.wireframeMesh = new THREE.Mesh( this.geometry, this.wireframeMaterial );
 
         let testScaleProjectionFactor = 1;
 
         this.verticesTestObj = new THREE.Object3D();
 
         this.initHexagonData( this.getDeck().props.layers[3].state.hexagons );
-
     }
 
     getGridFromThisGeometry(){
@@ -188,7 +239,6 @@ export default class GridPlane {
     }
 
     renderData(){
-
         let nextZoomFactor = this.getNextZoomFactor();
         let nextAltitudeFactor = this.getNextAltitudeFactor();
         let nextDistanceFactor = this.getNextDistanceFactor();
@@ -219,6 +269,19 @@ export default class GridPlane {
             }
             if( vert.y < this.minAlt ){ vert.y = this.minAlt; }
         });
+
+        for (let i = 0; i < this.geometry.faces.length; i++) {
+          var face = this.geometry.faces[i];
+          const vertices = [this.geometry.vertices[face.a], this.geometry.vertices[face.b], this.geometry.vertices[face.c]];
+          for (let j = 0; j < vertices.length; j++) {
+            const vertex = vertices[j];
+            face.vertexColors[j] = new THREE.Color(colorFromMap(vertex.y, this.heightColorMap));
+          }
+        }
+
+
+        this.geometry.colorsNeedUpdate = true;
+
         this.geometry.verticesNeedsUpdate = true;
 
     }
@@ -234,7 +297,6 @@ export default class GridPlane {
     }
 
     updateGeometry(){
-
         let maxSize = this.mapActualParams.latRange + this.mapActualParams.lngRange * 500;
 
         const centerIsEquals = this.mapActualParamsBefore && this.mapActualParams &&
@@ -258,6 +320,7 @@ export default class GridPlane {
 
             this.geometry.rotateX( Math.PI / 2);
             this.mesh.geometry = this.geometry;
+            this.wireframeMesh.geometry = this.geometry;
 
             this.forsedGeometryUpdate = false;
 
@@ -301,10 +364,11 @@ export default class GridPlane {
 
         this.geometry.rotateX( Math.PI / 2);
         this.mesh.geometry = this.geometry;
+        this.wireframeMesh.geometry = this.geometry;
+
     }
 
     updatePlane( gl, matrix ){
-
         this.mapGetActualParams();
 
         // if( this.lastUpdateGridTime &&  Date.now() - this.lastUpdateGridTime < 200 ){
@@ -316,6 +380,8 @@ export default class GridPlane {
         this.centerPosition = fromLL( coord.lng, coord.lat );
         this.mesh.position.x = this.centerPosition[0];
         this.mesh.position.z = this.centerPosition[1];
+        this.wireframeMesh.position.x = this.centerPosition[0];
+        this.wireframeMesh.position.z = this.centerPosition[1];
         this.updateGeometry();
         this.renderData();
 

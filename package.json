@@ -7,36 +7,40 @@
     "npm": "6.4.1"
   },
   "scripts": {
-    "start-local": "webpack-dev-server --env.local --progress --hot --open",
-    "start": "webpack-dev-server --progress",
-    "start2": "webpack-dev-server --progress --hot --open",
-    "build": "webpack",
+    "start:dev": "webpack-dev-server --progress --hot --open --mode development",
+    "build": "webpack --mode production",
     "heroku-postbuild": "npm run build && cp About.html dist/",
     "serve": "npm run build && node app.js"
   },
   "dependencies": {
-    "@deck.gl/experimental-layers": "^6.3.0",
-    "@deck.gl/mapbox": "^6.3.0",
-    "axios": "^0.18.0",
+    "@deck.gl/experimental-layers": "^6.4.10",
+    "@deck.gl/mapbox": "^6.4.10",
+    "axios": "^0.19.0",
     "d3-request": "^1.0.6",
-    "d3-scale": "^2.1.2",
-    "deck.gl": "^6.3.0",
-    "express": "^4.16.4",
+    "d3-scale": "^2.2.2",
+    "deck.gl": "^6.4.10",
+    "express": "^4.17.1",
     "file-loader": "^2.0.0",
     "heatmap.js": "^2.0.5",
-    "react": "^16.3.0",
-    "react-dom": "^16.3.0",
+    "moment": "^2.24.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
     "react-map-gl": "^3.3.0",
+    "three": "^0.106.2",
     "url-loader": "^1.1.2"
   },
   "devDependencies": {
-    "buble": "^0.19.3",
-    "buble-loader": "^0.5.0",
+    "@babel/core": "^7.5.0",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.6",
     "css-loader": "^1.0.1",
     "html-webpack-plugin": "^3.0.7",
+    "moment-locales-webpack-plugin": "^1.0.7",
+    "nodemon": "^1.19.1",
+    "polyfills": "^2.1.1",
     "style-loader": "^0.23.1",
-    "webpack": "^4.20.2",
-    "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.1.1"
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.5",
+    "webpack-dev-server": "^3.7.2"
   }
 }

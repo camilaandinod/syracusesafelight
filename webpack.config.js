@@ -5,10 +5,9 @@
 const resolve = require('path').resolve;
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 
 const CONFIG = {
-	mode: 'production',
-	//development
 
 	entry: {
 		app: resolve('./source/app.js')
@@ -20,7 +19,7 @@ const CONFIG = {
 
 	module: {
 		rules: [
-			{
+			/*{
 				// Compile ES2015 using buble
 				test: /\.js$/,
 				loader: 'buble-loader',
@@ -29,6 +28,11 @@ const CONFIG = {
 				options: {
 					objectAssign: 'Object.assign'
 				}
+			},*/
+			{
+				test: /\.js$/,
+				loader: 'babel-loader',
+				exclude: /node_modules/,
 			},
             {
                 test: /\.(png|jpg|gif|geojson|csv|gltf)$/i,
@@ -50,10 +54,11 @@ const CONFIG = {
 
 	// Optional: Enables reading mapbox token from environment variable
 	plugins: [
-		new HtmlWebpackPlugin({template: './template.html'})
-        ,new webpack.EnvironmentPlugin(['MapboxAccessToken'])
+		new HtmlWebpackPlugin({template: './template.html'}),
+		new webpack.EnvironmentPlugin(['MapboxAccessToken']),
+		new MomentLocalesPlugin()
 	]
 };
 
 // This line enables bundling against src in this repo rather than installed module
-module.exports = env => (env ? require('../../webpack.config.local')(CONFIG)(env) : CONFIG);
+module.exports = CONFIG;

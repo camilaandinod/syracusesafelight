@@ -9,26 +9,9 @@ on [deck.gl](http://deck.gl) website.
 npm install
 ```
 
-- Delete last line in `webpack.config.js`
+- Start the app locally.
 ```
-module.exports = require('../webpack.config.local')(module.exports);
-```
-
-- Add [Mapbox access token](https://www.mapbox.com/help/define-access-token/)
-by run this command in your terminal.
-
-```
-export MapboxAccessToken=<Your_Token>
-```
-
-or you can directly add it to `app.js`
-```
-// Set your mapbox token here
-const MAPBOX_TOKEN = <Your_Token>>;
-```
-- Start the app.
-```
-npm start
+npm start:dev
 ```
 
 ### Data format

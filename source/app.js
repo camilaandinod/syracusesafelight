@@ -11,11 +11,13 @@ import blue from '../assets/blue.geojson';
 import buildings_geo from '../assets/buildings.geojson';
 import gltf from '../scene.gltf';
 import jsonHexagon from '../a';
+import './ShaderMaterialExtend.js';
 import styles from '../styles.css';
 import axios from 'axios';
 import h337 from '../node_modules/heatmap.js/build/heatmap';
 import dismap from '../dismap.jpg';
-
+import "../node_modules/three/src/Three.js";
+import moment from "moment";
 import GridPlane from './grid.plane';
 import ThreeRenderer from './three.renderer';
 import diverging from "d3-scale/src/diverging";
@@ -59,7 +61,7 @@ export function getPeriodsConfigTemplate(){
         },
         {
             index: 3,
-            title: '15-30/12/2017',
+            title: '15-31/12/2017',
             min: [15,12,2017],
             max: [31,12,2017],
             places: [],
@@ -73,7 +75,7 @@ export function getPeriodsConfigTemplate(){
         },
         {
             index: 5,
-            title: '15-30/01/2018',
+            title: '15-31/01/2018',
             min: [15,1,2018],
             max: [31,1,2018],
             places: [],
@@ -87,7 +89,7 @@ export function getPeriodsConfigTemplate(){
         },
         {
             index: 7,
-            title: '15-30/02/2018',
+            title: '15-28/02/2018',
             min: [15,2,2018],
             max: [31,2,2018],
             places: [],
@@ -101,7 +103,7 @@ export function getPeriodsConfigTemplate(){
         },
         {
             index: 9,
-            title: '15-30/03/2018',
+            title: '15-31/03/2018',
             min: [15,3,2018],
             max: [31,3,2018],
             places: [],
@@ -202,9 +204,6 @@ var fromLL = function ( lng, lat) {
     return [(x + extent) / (2 * extent), 1 - ((y + extent) / (2 * extent))];
 };
 
-
-const THREE = window.THREE;
-
 const building_op_visible = 0.6;
 const building_op_hidden = 0;
 
@@ -295,7 +294,6 @@ export class App extends Component {
             };
             for( let i = 0; i < arrForTest.length; i++ ){ sortPoint( arrForTest[i] ); }
             this.luxLevelJSON = tempData;
-            //console.log(this.luxLevelJSON);
         }, ( reason ) =>{
 
         } );
@@ -474,7 +472,6 @@ export class App extends Component {
 
     _onLoad()
     {
-        console.log("Loaded");
         this.setState({
           //viewState: INITIAL_VIEW_STATE
 
@@ -492,13 +489,11 @@ export class App extends Component {
 
     _rotateCamera()
     {
-        console.log("What");
+        // what does this function do?
     }
 
     _onViewStateChange({viewState})
     {
-        console.log("view state changed");
-        console.log(viewState);
         this.setState({viewState});
 
         //currentViewState = Object.assign({}, viewState);
@@ -506,17 +501,14 @@ export class App extends Component {
 
     togglePerspective(e)
     {
-        console.log("togglePerspective");
         if (this.is2D)
         {
-            console.log("changing from 2D");
             this.setState({
                 viewState: currentViewState,
             });
         }
         else
         {
-            console.log("changing from 3D");
             this.setState({
                 viewState: otherViewState,
             });
@@ -527,7 +519,6 @@ export class App extends Component {
 
     set2D()
     {
-        console.log("changing to 2D");
         this.setState({
             viewState: otherViewState,
         });
@@ -537,7 +528,6 @@ export class App extends Component {
 
     set3D()
     {
-        console.log("changing to 3D");
         this.setState({
             viewState: currentViewState,
         });
@@ -547,7 +537,7 @@ export class App extends Component {
 
     onEnd()
     {
-        console.log("end transit");
+        // what does this function?
     }
 
 
@@ -613,21 +603,25 @@ export class App extends Component {
         return coord;
     }
 // This is the likely culprit
-    presetFeaturesToPeriods( _periodsConfig, _timestamp, _feature  ){
-        let timestamp = _timestamp;
-        let nextDate = new Date( timestamp );
-        //console.log(nextDate)
-        nextDate = new Date( nextDate.valueOf() + nextDate.getTimezoneOffset() * 60000 );
-        let _year = nextDate.getFullYear();
-        let _month = nextDate.getMonth()+1;
-        let _day = nextDate.getDate();
-        let date = parseInt( timestamp.split(' ')[1] );
-        for( let i = 0; i < _periodsConfig.length; i++ ){
-            let moreThanMin = _day >= _periodsConfig[i].min[0] && _month >= _periodsConfig[i].min[1] && _year >= _periodsConfig[i].min[2];
-            let lessThanMax = _day <= _periodsConfig[i].max[0] && _month <= _periodsConfig[i].max[1] && _year <= _periodsConfig[i].max[2];
-            if( moreThanMin && lessThanMax ){
-                _feature.period = _periodsConfig[i].index;
-                _periodsConfig[i].places.push( _feature );
+    presetFeaturesToPeriods( _periodsConfig, _timestamp, _feature, byPass = false ){
+        if (byPass) {
+            _feature.period = 0;
+            _periodsConfig[0].places.push(_feature);
+        } else {
+            let timestamp = _timestamp;
+            let nextDate = new Date( timestamp );
+            nextDate = new Date( nextDate.valueOf() + nextDate.getTimezoneOffset() * 60000 );
+            let _year = nextDate.getFullYear();
+            let _month = nextDate.getMonth()+1;
+            let _day = nextDate.getDate();
+            let date = parseInt( timestamp.split(' ')[1] );
+            for( let i = 0; i < _periodsConfig.length; i++ ){
+                let moreThanMin = _day >= _periodsConfig[i].min[0] && _month >= _periodsConfig[i].min[1] && _year >= _periodsConfig[i].min[2];
+                let lessThanMax = _day <= _periodsConfig[i].max[0] && _month <= _periodsConfig[i].max[1] && _year <= _periodsConfig[i].max[2];
+                if( moreThanMin && lessThanMax ){
+                    _feature.period = _periodsConfig[i].index;
+                    _periodsConfig[i].places.push( _feature );
+                }
             }
         }
     }
@@ -648,6 +642,7 @@ export class App extends Component {
 
     componentDidMount() {
         this._animate();
+        setTimeout(this._displayAlert, 0);
     }
 
     componentWillUnmount() {
@@ -706,6 +701,7 @@ export class App extends Component {
 
     }
 
+
     _animate() {
         const {
             loopLength = 1800, // unit corresponds to the timestamp in source data
@@ -737,31 +733,38 @@ export class App extends Component {
 
 
     setTooltip(info) {
-        console.log("!", info);
-        console.log(this.slidersAsMap[ "slider-userrate" ].activePeriod.places);
         let tooltip = document.getElementById('tooltip');
         let info_block = document.getElementById('info-block');
+        let idrating = document.getElementById('idrating');
+        let lat = document.getElementById('latitude');
+        let long = document.getElementById('longitude');
+        let rating = document.getElementById('rating');
+        let date = document.getElementById('date');
         let timestamp = document.getElementById('timestamp');
         let comment = document.getElementById('comment');
 
         if (info) {
+            console.log(info)
             if ( info.properties.rate ) {
                 let rateColor = this.rateLevelsFilter( info.properties.rate );
                 if( rateColor.front[3] === 0 ){
                     tooltip.style.display = 'none';
-                    info_block.style.display = 'none';
+                    info_block.style.display = 'block';
                 } else {
                     tooltip.innerHTML = 'Rating: ' + info.properties.rate;
                     tooltip.style.display = 'block';
                     tooltip.style.top = this.mouse_coord.y + 0 + 'px';
                     tooltip.style.left = this.mouse_coord.x + 0 + 'px';
                     info_block.style.display = 'block';
-                    if ( info.properties.comments ) {
-                        comment.innerHTML = info.properties.comments;
-                    } else {
-                        comment.innerHTML = 'no comments';
-                    }
-                    timestamp.innerHTML = info.properties.timestamp;
+
+                    const eventDateTime = moment.utc(info.properties.timestamp);
+                    idrating.innerHTML = info.properties.idrating;
+                    latitude.innerHTML = info.properties.latitude.toFixed(3);
+                    longitude.innerHTML = info.properties.longitude.toFixed(3);
+                    rating.innerHTML = info.properties.rate;
+                    date.innerHTML = eventDateTime.format('DD MMM YYYY');
+                    timestamp.innerHTML = eventDateTime.format('LT');
+                    comment.innerHTML = info.properties.comments || 'no comments';
                 }
             }
         } else {
@@ -772,7 +775,6 @@ export class App extends Component {
     }
 
     setTooltipLux(info) {
-        console.log("!", info);
         let tooltip = document.getElementById('tooltip');
         let info_block = document.getElementById('info-block');
         let timestamp = document.getElementById('timestamp');
@@ -847,8 +849,6 @@ export class App extends Component {
             "type": "geojson",
             "data": sourceLux
         });
-
-            //console.log(JSON.stringify(sourceLux));
        map.addLayer({
             "id": "light-heat",
             "type": "heatmap",
@@ -1049,6 +1049,7 @@ export class App extends Component {
         );
 
         this.threeRenderer.scene.add( this.plane.mesh );
+        this.threeRenderer.scene.add( this.plane.wireframeMesh );
         setTimeout( () => {
             this.slidersAsMap[ "slider-crimelevel" ]
                 .slider.onSliderInput({
@@ -1118,13 +1119,10 @@ export class App extends Component {
 
     getPlaces()
     {
-        //
-        //console.log("periods", this.periods);
-        //throw new Error("YAY");
+
         let places = [];
         let periods = this.periods[ "slider-userrate" ];
 
-        //for (let periodIndex in period)
         for (let periodIndex = 0; periodIndex < periods.length; periodIndex++)
         {
             let showPeriod = this.showPeriods[periodIndex];
@@ -1140,7 +1138,6 @@ export class App extends Component {
 
             }
         }
-        //console.log(places.length)
         return places;
     }
 
@@ -1479,10 +1476,20 @@ export class App extends Component {
     HTML_getInfoBlock(){
         return (
             <div id='info-block' className='info-block'>
-                <span id='key'>Time: </span>
-                <span className='value' id="timestamp">12/12/12</span>
+                <span id='key'>ID:</span>
+                <span className='value' id="idrating"></span>
+                <span id='key'>Lat:</span>
+                <span className='value' id="latitude"></span>
+                <span id='key'>Long:</span>
+                <span className='value' id="longitude"></span>
+                <span id='key'>Rating:</span>
+                <span className='value' id="rating"></span>
+                <span id='key'>Date:</span>
+                <span className='value' id="date"></span>
+                <span id='key'>Time:</span>
+                <span className='value' id="timestamp"></span>
                 <span id='key'>Comment: </span>
-                <span className='value' id="comment">here is dangerous</span>
+                <span className='value' id="comment"></span>
             </div>
         );
     }
@@ -1492,15 +1499,11 @@ export class App extends Component {
         return (
             <div className="map-overlay title-features"><h2>Syracuse University Campus Lighting and Safety Map</h2>
                 <div id="pd">
-                    <p>Data collected 2017-2018</p>
+                    <p>Data collected 2017-</p>
                 </div>
                 <p>
-                Syracuse University School of Architecture and School of Information Studies
-                <br/>
-                <br/>
-                Grant Funding&#8203; by Syracuse University Campus as Lab for Sustainability
-                <br/>
-                <br/>
+                Grant Funding by Syracuse University Campus as Lab for Sustainability and Syracuse University School of Architecture
+                <p></p>
                 <span style={{ color: "#f8f8f8" }} >_____________________________________</span>
                 <br/>
                 </p>
@@ -1550,7 +1553,6 @@ export class App extends Component {
             let tabName = this.key;
             let title = this.title;
             let activeTitle = this.activeTitle;
-            //console.log("who?", this)
             let currentValue = this.currentValue;
             let showPeriods = _App.showPeriods;
             let isActive = this.isActive ? "active" : "hidden";
@@ -1570,7 +1572,6 @@ export class App extends Component {
             }
 
             let checkAll = (event) => {
-              console.log(event.target.innerHTML);
                 if(document.getElementById(tabName).style.visibility=='hidden' || !document.getElementById(tabName).style.visibility){
                     document.getElementById(tabName).style.visibility='visible';
                     event.target.innerHTML = text_hide;
@@ -1601,7 +1602,16 @@ export class App extends Component {
                         <div className="slider-container">
                             <span className="slider-min" id={`${ tabName }-min`}>{ sliderMinVal }</span>
                             <span className="slider-max" id={`${ tabName }-max`}>{ sliderMaxVal }</span>
-                            <input className="slider-range" onChange={ onSliderInput } onInput={ onSliderInput } id={`${ tabName }-input`} type="range" name="volume" min="0" max="11" value={`${ currentValue }`}/>
+                            <input
+                                className="slider-range"
+                                onChange={ onSliderInput }
+                                id={`${ tabName }-input`}
+                                type="range"
+                                name="volume"
+                                min="0"
+                                max="11"
+                                value={`${ currentValue }`}
+                            />
                             {/*<button onClick={_App.togglePerspective}>{ _App.is2D ? 'View in 3D' : 'View in 2D'}</button>*/}
                         </div>
 
@@ -1618,7 +1628,7 @@ export class App extends Component {
                 {
                     key: "slider-total",
                     isActive: true,
-                    title: "User Rating and Crime level",
+                    title: "Crime Level",
                     activeTitle: "1-15/11/2017",
                     currentValue: "0",
                     tabOnClick: tabconfigSwitcher,
@@ -1627,8 +1637,9 @@ export class App extends Component {
                     sliderMaxVal: "April 2018",
                     sliderCurrentVal: "1-15/11/2017",
                     onSliderInput: function( e ){
-                        //console.log(e.target);
                         let periodIndex = e.target.value;
+                        console.log(_App.showPeriods);
+                        console.log(this.key)
                         if( _App.periods[ this.key ][ periodIndex ] )
                         {
                             _App.totalSliderDate = periodIndex;
@@ -1643,15 +1654,18 @@ export class App extends Component {
                             }
 
                             //from Nick: If you want to see only the current period and no others, enable this instead of the below loop.
-                            _App.showPeriods[periodIndex] = true;
+                            // _App.showPeriods[periodIndex] = true;
 
                             //from Nick: If you want to see all the periods up to the present, enable this instead of the above line.
-                            /*
-                            for (let i = 0; i < parseInt(periodIndex); i++)
-                            {
+
+                            // for (let i = 0; i < parseInt(periodIndex); i++)
+                            // {
+                            //     _App.showPeriods[i] = true;
+                            // }
+
+                            for (let i = 0; i < NUM_PERIODS; i++) {
                                 _App.showPeriods[i] = true;
                             }
-                            */
 
                             _App.slidersAsMap[ this.key ].activePeriod = _App.periods[ this.key ][ _App.totalSliderDate ];
                             _App.slidersAsMap[ "slider-userrate" ].slider.onSliderInput( e );
@@ -1678,7 +1692,7 @@ export class App extends Component {
                     sliderMaxVal: "April 2018",
                     sliderCurrentVal: "1-15/11/2017",
                     onSliderInput: function( e ){
-
+                        console.log('does this run?')
                         if( _App.periods[ this.key ][ e.target.value ] ){
                             _App.userRatingDate = 9;//e.target.value;
                             this.currentValue = 9;//e.target.value;
@@ -1697,7 +1711,8 @@ export class App extends Component {
                                 _App.presetFeaturesToPeriods(
                                     _App.periods[ currentSliderUID ],
                                     tempData.features[i].properties.timestamp,
-                                    tempData.features[i]
+                                    tempData.features[i],
+                                    true
                                 );
                             }
                         });
