@@ -30,21 +30,11 @@ const CONFIG = {
 				}
 			},*/
 			{
-				test: /\.js?$/,
+				test: /\.jsx?$/,
 				loader: 'babel-loader',
 				exclude: /node_modules/,
 				options: {
-					presets: ['babel-preset-env','babel-preset-react'],
-					plugins:['syntax-dynamic-import']
-				}
-			},
-
-			{
-				test: /\.jsx?$/,
-				loader: 'react-hot-loader',
-				exclude: /node_modules/,
-				options: {
-					presets: ['babel-preset-env','babel-preset-react'],
+					presets: ['@babel/preset-env','@babel/preset-react'],
 					plugins:['syntax-dynamic-import']
 				}
 			},
