@@ -18,6 +18,7 @@ import h337 from '../node_modules/heatmap.js/build/heatmap';
 import dismap from '../dismap.jpg';
 import "../node_modules/three/src/Three.js";
 import moment from "moment";
+import { GLTFLoader } from './GLTFLoader.js';
 import GridPlane from './grid.plane';
 import ThreeRenderer from './three.renderer';
 import diverging from "d3-scale/src/diverging";
