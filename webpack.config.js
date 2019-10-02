@@ -10,7 +10,7 @@ const MomentLocalesPlugin = require('moment-locales-webpack-plugin');
 const CONFIG = {
 
 	entry: {
-		app: resolve('./source/app.js')
+		app: resolve('./source/app.jsx')
 	},
 
 	output: {
@@ -32,6 +32,12 @@ const CONFIG = {
 			{
 				test: /\.js$/,
 				loader: 'babel-loader',
+				exclude: /node_modules/,
+			},
+
+			{
+				test: /\.jsx$/,
+				loader: 'react-hot-loader',
 				exclude: /node_modules/,
 			},
             {
