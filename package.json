@@ -20,7 +20,7 @@
     "d3-request": "^1.0.6",
     "d3-scale": "^2.2.2",
     "deck.gl": "^6.4.10",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "file-loader": "^2.0.0",
     "heatmap.js": "^2.0.5",
     "moment": "^2.24.0",
